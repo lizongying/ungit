@@ -50,6 +50,7 @@ jobs:
           sudo apt install libssl-dev
           sudo apt install pkg-config
           rustup update
+          cargo clean 
 
       - name: Install cross
         run: cargo install cross
