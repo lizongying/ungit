@@ -47,7 +47,7 @@ jobs:
       - name: Openssl
         run: |
           sudo apt-get update
-          sudo apt-get install libssl-dev
+          sudo apt-get install --reinstall libssl-dev
           rustup update
 
       - name: Install cross
