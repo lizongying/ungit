@@ -1,0 +1,105 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PACKAGE_NAME: ungit
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  rust_ubuntu:
+    runs-on: ubuntu-latest
+    needs: release
+    strategy:
+      matrix:
+        target:
+          - aarch64-unknown-linux-gnu
+          - x86_64-unknown-linux-gnu
+          - x86_64-pc-windows-gnu
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build
+        run: |
+          cross build --release --target=${{ matrix.target }}
+
+      - name: Upload Release Asset Windows
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: target/${{ matrix.target }}/release/${{ env.PACKAGE_NAME }}.exe
+          asset_name: ${{ env.PACKAGE_NAME }}_${{ matrix.target }}.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset Linux
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: target/${{ matrix.target }}/release/${{ env.PACKAGE_NAME }}
+          asset_name: ${{ env.PACKAGE_NAME }}_${{ matrix.target }}
+          asset_content_type: application/octet-stream
+
+  rust_macos:
+    runs-on: macos-latest
+    needs: release
+    strategy:
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          rustup target add x86_64-apple-darwin
+
+      - name: Build for macOS
+        run: |
+          cargo build --release --target=${{ matrix.target }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: target/${{ matrix.target }}/release/${{ env.PACKAGE_NAME }}
+          asset_name: ${{ env.PACKAGE_NAME }}_${{ matrix.target }}
+          asset_content_type: application/octet-stream
