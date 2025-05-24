@@ -44,14 +44,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Openssl
-        run: |
-          sudo apt update
-          sudo apt install libssl-dev
-          sudo apt install pkg-config
-          rustup update
-          cargo clean 
-
       - name: Install cross
         run: cargo install cross
 
@@ -92,11 +84,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Openssl
-        run: |
-          brew install openssl
-          rustup update
 
       - name: Install dependencies
         if: matrix.target == 'x86_64-apple-darwin'

@@ -13,13 +13,22 @@ ungit是一個下載git倉庫的工具，可以僅下載特定分支、標籤，
 ## 使用
 
 - 使用方法基本同`degit`
+
+```shell
+ln -s ~/Download/ungit_aarch64-apple-darwin /usr/local/bin/degit
+```
+
+```shell
+degit lizongying/ungit
+```
+
 - 做了簡化，僅支持以下形式：
 
 ```shell
-ungit user/repo
+degit lizongying/ungit
 
-ungit user/repo#dev       # branch
-ungit user/repo#v1.2.3    # release tag
+degit lizongying/ungit#main       # branch
+degit lizongying/ungit#v0.1.6    # release tag
 ```
 
 ## 讚賞
